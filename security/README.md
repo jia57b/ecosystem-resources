@@ -72,6 +72,21 @@ Formal verification for Soroban contracts. Sunbeam checks the compiled Wasm byte
 | **Docs** | [Certora Sunbeam](https://docs.certora.com/en/latest/docs/sunbeam/index.html) |
 | **Type** | Formal verification |
 
+### Komet
+
+Fuzzing and formal verification for Soroban contracts, by Runtime Verification. You write property tests in Rust as contract methods with a `test_` prefix. `komet test` fuzzes them. `komet prove run` proves them for all inputs.
+
+```bash
+bash <(curl https://kframework.org/install)   # installs kup
+kup install komet
+```
+
+| Feature | Details |
+|---------|---------|
+| **Docs** | [docs.runtimeverification.com/komet](https://docs.runtimeverification.com/komet) |
+| **GitHub** | [runtimeverification/komet](https://github.com/runtimeverification/komet) |
+| **Type** | Fuzzing and formal verification |
+
 ### Soroban Security Portal
 
 A community database of Soroban audit reports and vulnerability findings, with semantic search. Built by Inferara. Use it to learn what auditors found in projects like yours.
@@ -179,6 +194,7 @@ pub fn withdraw(e: &Env, user: Address, amount: i128) {
 - [ ] Events emitted for important actions
 - [ ] Upgrade mechanism is secure (if applicable)
 - [ ] Tested on testnet extensively
+- [ ] Built with `stellar contract build` and source verified ([Contract Verification](../verification/))
 
 ### For High-Value Contracts
 
@@ -209,3 +225,4 @@ pub fn withdraw(e: &Env, user: Address, amount: i128) {
 - [Almanax](https://www.almanax.ai)
 - [Certora Sunbeam](https://docs.certora.com/en/latest/docs/sunbeam/index.html)
 - [Soroban Security Portal](https://sorobansecurity.com)
+- [Contract Verification](../verification/) - prove a deployed contract was built from its published source

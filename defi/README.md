@@ -25,6 +25,31 @@ The most popular lending protocol on Stellar, enabling permissionless lending po
 - Multiple collateral types
 - Flash loan support (v2)
 
+### XOXNO Lending
+
+A money market on Soroban, live on mainnet. It uses a Hub and Spoke model: a hub holds assets in one pool with separate accounting per market, and each spoke sets its own usable assets, borrowing limits, and caps. Markets include XLM, stablecoins, BTC assets, LP tokens, and tokenized RWAs such as treasury bills and gold. Each lending account is a transferable position NFT.
+
+| Feature | Details |
+|---------|---------|
+| **Docs** | [XOXNO Lending docs](https://xoxno.com/docs/stellar-lending/overview) |
+| **Integrator API** | REST, no API key: `https://api.xoxno.com` (mainnet), `https://testnet-api.xoxno.com` (testnet) · [Integrator API guide](https://xoxno.com/docs/stellar-lending/dev/integrator-api) · [Swagger UI](https://api.xoxno.com/) |
+| **Swap API** | Quotes and ready-to-sign XDR: `https://stellar-swap.xoxno.com` · [OpenAPI spec](https://stellar-swap.xoxno.com/api-docs/openapi.json) |
+| **TypeScript SDK** | `npm install @xoxno/sdk-js @stellar/stellar-sdk` · [App integration guide](https://xoxno.com/docs/stellar-lending/dev/wallet-integration) |
+| **Rust SDK** | `xoxno-contract-sdk` on [crates.io](https://crates.io/crates/xoxno-contract-sdk) · [Contract SDK guide](https://xoxno.com/docs/stellar-lending/dev/contract-sdk) |
+| **AI skill** | [xoxno-lending SKILL.md](https://github.com/XOXNO/rs-lending-xlm/blob/main/skills/xoxno-lending/SKILL.md) · [llms.txt](https://xoxno.com/llms.txt) |
+| **Contracts** | [XOXNO/rs-lending-xlm](https://github.com/XOXNO/rs-lending-xlm) (PolyForm Noncommercial license) |
+| **Use Case** | Lending, borrowing, leverage, flash loans |
+
+**Features:**
+- Supply, borrow, repay, and withdraw, plus batch versions
+- Leverage (`multiply`), collateral and debt swaps, and flash loans
+- Migrate a position from Blend
+- `@xoxno/sdk-js/stellar-lending` builds unsigned transactions for any Stellar wallet; `/stellar-lending/read` reads markets, APYs, and positions from the XOXNO API
+- The Integrator API returns display-ready JSON for assets and positions. The full API also has hubs, spokes, reserves, liquidations, and history routes.
+- `xoxno-contract-sdk` calls the protocol from your Soroban contract. Its `testutils` feature deploys the full protocol in tests (`LendingFixture`).
+
+The protocol contracts use a noncommercial license: commercial use needs an agreement with XOXNO. The SDKs are MIT and ISC. No audit is listed yet. Check the audit status before you hold real assets.
+
 ## DEXs & AMMs
 
 ### Soroswap
@@ -87,6 +112,25 @@ Yield aggregation and vault infrastructure by PaltaLabs.
 - Blend protocol integration
 - Strategy composition
 
+### Spectra Finance
+
+Fixed-rate yield markets. Spectra splits a yield-bearing asset into a Principal Token (PT) and a Yield Token (YT). Stellar markets accept XLM and USDC directly: the app swaps them into the market asset first.
+
+| Feature | Details |
+|---------|---------|
+| **App** | [app.spectra.finance](https://app.spectra.finance/fixed-rate?network=stellar) |
+| **Docs** | [Spectra on Stellar](https://docs.spectra.finance/docs/stellar) |
+| **Developer docs** | [Build with Spectra on Stellar](https://dev.spectra.finance/docs/stellar) |
+| **Contracts** | [Deployed contracts (Stellar mainnet)](https://dev.spectra.finance/docs/technical-reference/deployed-contracts#stellar-mainnet) |
+| **Use Case** | Lock a fixed rate, trade future yield |
+
+**Features:**
+- Core v2 on Soroban: Registry, PT Factory, Router, and Limit Order Engine
+- Limit orders for PT and YT at maker-set implied rates
+- Blend wrapper turns Blend positions into vault shares
+- PT bridge between Stellar and EVM networks
+- Deterministic zero-coupon-bond oracle for PT prices
+
 ## Stablecoins & CDPs
 
 ### Orbit CDP Protocol
@@ -103,6 +147,23 @@ Collateralized stablecoin issuance supporting multiple currencies.
 - XLM and bond collateral
 - Pegkeeper automation
 - Blend protocol integration
+
+## Escrow
+
+### Trustless Work
+
+Escrow-as-a-Service on Soroban. You define an escrow as JSON (roles, milestones, amounts), and Trustless Work deploys the contract. Funds stay in the contract until the approver approves the milestones. Supports single-release and multi-release escrows, plus dispute resolution.
+
+| Feature | Details |
+|---------|---------|
+| **Docs** | [docs.trustlesswork.com](https://docs.trustlesswork.com/trustless-work) |
+| **REST API** | [API introduction](https://docs.trustlesswork.com/trustless-work/api-rest/introduction) (needs an API key) |
+| **React SDK** | `npm install @trustless-work/escrow` · [React SDK](https://docs.trustlesswork.com/trustless-work/escrow-react-sdk/introduction) · [Escrow Blocks](https://docs.trustlesswork.com/trustless-work/escrow-blocks-sdk/introduction) (ready-made UI) |
+| **Tools** | [Backoffice dApp](https://dapp.trustlesswork.com) · [Demo](https://demo.trustlesswork.com) · [Escrow Viewer](https://viewer.trustlesswork.com) |
+| **Contracts** | [Trustless-Work/trustlesswork-smart-contract-stellar](https://github.com/Trustless-Work/trustlesswork-smart-contract-stellar) |
+| **Use Case** | Freelance and marketplace payments, milestone grants, deposits |
+
+> **Hackathon tip:** Use the Escrow Blocks to get a working escrow UI fast. Then spend your time on the product around it.
 
 ## Major Stablecoins on Stellar
 
@@ -141,9 +202,29 @@ const quote = await client.quote({
 });
 ```
 
+### Using XOXNO Lending
+
+```typescript
+// Example: Read collateral markets and a wallet's positions
+import { createStellarLendingReadClient } from "@xoxno/sdk-js/stellar-lending/read";
+
+const owner = "G..."; // the wallet's public key (G... or C... address)
+const lending = createStellarLendingReadClient({ baseUrl: "https://api.xoxno.com" });
+const assets = await lending.assets({ usage: "collateral" });
+const positions = await lending.positions(owner);
+```
+
+Or call the Integrator API directly:
+
+```bash
+curl "https://api.xoxno.com/stellar-lending/v1/assets?usage=borrow"
+curl "https://api.xoxno.com/stellar-lending/v1/users/<G-or-C-address>/positions"
+```
+
 ## Resources
 
 - [Stellar DeFi Overview](https://stellar.org/use-cases/defi)
 - [Blend Protocol Docs](https://docs.blend.capital/)
 - [Soroswap Docs](https://docs.soroswap.finance)
 - [DeFindex Docs](https://docs.defindex.io)
+- [XOXNO Lending Docs](https://xoxno.com/docs/stellar-lending/overview)
